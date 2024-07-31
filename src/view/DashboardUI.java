@@ -1,8 +1,11 @@
 package view;
 
 import business.CustomerController;
+import business.ProductController;
 import core.Helper;
+import core.Item;
 import entity.Customer;
+import entity.Product;
 import entity.User;
 
 import javax.swing.*;
@@ -29,15 +32,31 @@ public class DashboardUI extends JFrame {
     private JButton btn_customer_new;
     private JLabel lbl_f_customer_name;
     private JLabel lbl_f_customer_type;
+    private JPanel pnl_product;
+    private JScrollPane scrl_product;
+    private JPanel pnl_filter_product;
+    private JTextField fld_f_product_name;
+    private JTextField fld_f_product_code;
+    private JComboBox<Item> cmb_product_stock;
+    private JButton btn_product_filter;
+    private JButton btn_product_reset;
+    private JButton btn_product_new;
+    private JLabel lbl_f_product_name;
+    private JLabel lbl_f_product_code;
+    private JLabel lbl_f_product_stock;
+    private JTable tbl_product;
     private User user;
     private  CustomerController customerController;
+    private ProductController productController;
     private DefaultTableModel tmdl_customer=new DefaultTableModel();
+    private DefaultTableModel tmdl_product=new DefaultTableModel();
     private JPopupMenu popup_customer=new JPopupMenu();
-
+    private JPopupMenu popup_product=new JPopupMenu();
 
     public DashboardUI(User user) {
         this.user = user;
         this.customerController = new CustomerController();
+        this.productController = new ProductController();
         if(user == null) {
             Helper.showMsg("error");
             dispose();
@@ -62,6 +81,105 @@ public class DashboardUI extends JFrame {
         this.cmb_f_customer_type.setModel(new DefaultComboBoxModel<>(Customer.TYPE.values()));
         this.cmb_f_customer_type.setSelectedItem(null);
 
+        //PRODUCT TAB
+        loadProductTable(null);
+        loadProductPopupMenu();
+        loadProductButtonEvent();
+        this.cmb_product_stock.addItem(new Item(1,"Stokta Var"));
+        this.cmb_product_stock.addItem(new Item(2,"Stokta Yok"));
+        this.cmb_product_stock.setSelectedItem(null);
+    }
+    private void loadProductButtonEvent(){
+        this.btn_product_new.addActionListener(e->{
+            ProductUI productUI=new ProductUI(new Product());
+            productUI.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    loadProductTable(null);
+                }
+            });
+        });
+        this.btn_product_reset.addActionListener(e -> {
+            loadProductTable(null);
+            this.fld_f_product_name.setText(null);
+            this.fld_f_product_code.setText(null);
+            this.cmb_product_stock.setSelectedItem(null);
+
+        });
+        this.btn_product_filter.addActionListener(e -> {
+            ArrayList<Product> filteredProducts=this.productController.filter(
+                    this.fld_f_product_name.getText(),
+                    this.fld_f_product_code.getText(),
+                    (Item)this.cmb_product_stock.getSelectedItem()
+            );
+            loadProductTable(filteredProducts);
+
+        });
+
+    }
+    private void loadProductTable(ArrayList<Product> products) {
+        Object[]colomnProduct={"ID","Ürün Adı","Ürün kodu","Fiyat","Stok"};
+
+        if(products == null) {
+            products=this.productController.findAll();
+        }
+        //Tablo sıfırlama
+        DefaultTableModel clearmodel=(DefaultTableModel)this.tbl_product.getModel();
+        clearmodel.setRowCount(0);
+        this.tmdl_product.setColumnIdentifiers(colomnProduct);
+        for(Product product : products) {
+            Object[]rowObject= {
+                    product.getId(),
+                    product.getName(),
+                    product.getCode(),
+                    product.getPrice(),
+                    product.getStock(),
+            };
+            this.tmdl_product.addRow(rowObject);
+        }
+        this.tbl_product.setModel(this.tmdl_product);
+        this.tbl_product.getTableHeader().setReorderingAllowed(false);
+        this.tbl_product.getColumnModel().getColumn(0).setMaxWidth(50);
+        this.tbl_product.setEnabled(false);//düzeltilemez db deki bilgiler
+
+    }
+    private void loadProductPopupMenu() {
+        this.tbl_product.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                int selectedRow = tbl_product.rowAtPoint(e.getPoint());
+                tbl_product.setRowSelectionInterval(selectedRow, selectedRow);
+            }
+        });
+
+
+        this.popup_product.add("Güncelle").addActionListener(e->{
+            int selectId= Integer.parseInt(this.tbl_product.getValueAt(this.tbl_product.getSelectedRow(), 0).toString());
+            ProductUI productUI=new ProductUI(this.productController.getByID(selectId));
+            productUI.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    loadProductTable(null);
+                }
+            });
+
+
+        });
+        this.popup_product.add("Sil").addActionListener(e->{
+            int selectId= Integer.parseInt(this.tbl_product.getValueAt(this.tbl_product.getSelectedRow(), 0).toString());
+            if(Helper.confirm("sure")){
+                if(this.productController.delete(selectId)) {
+                    Helper.showMsg("done");
+                    loadProductTable(null);
+                }
+                else{
+                    Helper.showMsg("error");
+                }
+            }
+
+        });
+
+        this.tbl_product.setComponentPopupMenu(this.popup_product);
     }
     private void loadCustomerButtonEvent() {
         this.btn_customer_new.addActionListener(e->{
@@ -124,7 +242,6 @@ public class DashboardUI extends JFrame {
 
         this.tbl_customer.setComponentPopupMenu(this.popup_customer);
     }
-
     private void loadCustomerTable(ArrayList<Customer> customers) {
         Object[]colomnCustomer={"ID","Müşteri adi","Tipi","Telefon","E-posta","Adres"};
 
