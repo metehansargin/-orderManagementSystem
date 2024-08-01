@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class BasketDao {
     private Connection connection;
@@ -27,6 +28,28 @@ public class BasketDao {
             e.printStackTrace();
             return false; // SQLException durumunda false döndürülmesi daha mantıklı
         }
+    }
+    public ArrayList<Basket> findAll(){
+        ArrayList<Basket> baskets=new ArrayList<>();//listenin içine at ve döndür o listeyi
+        try {
+            ResultSet rs=this.connection.createStatement().executeQuery("SELECT *from basket");//bütün userları listelemek isitoruz
+            while(rs.next()){//dönen elemaının ilk elemanını al
+                baskets.add(this.match(rs));//ve mactch işlemini gerçekleştir
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return baskets;
+    }
+    public boolean clear() {
+        String query = "delete from basket ";
+        try {
+            PreparedStatement pr=this.connection.prepareStatement(query);
+            return pr.executeUpdate() != -1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
     public Basket match(ResultSet rs) throws SQLException {
