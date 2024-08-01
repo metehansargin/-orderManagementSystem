@@ -1,9 +1,11 @@
 package view;
 
+import business.BasketController;
 import business.CustomerController;
 import business.ProductController;
 import core.Helper;
 import core.Item;
+import entity.Basket;
 import entity.Customer;
 import entity.Product;
 import entity.User;
@@ -48,6 +50,7 @@ public class DashboardUI extends JFrame {
     private User user;
     private  CustomerController customerController;
     private ProductController productController;
+    private BasketController basketController;
     private DefaultTableModel tmdl_customer=new DefaultTableModel();
     private DefaultTableModel tmdl_product=new DefaultTableModel();
     private JPopupMenu popup_customer=new JPopupMenu();
@@ -57,6 +60,7 @@ public class DashboardUI extends JFrame {
         this.user = user;
         this.customerController = new CustomerController();
         this.productController = new ProductController();
+        this.basketController = new BasketController();
         if(user == null) {
             Helper.showMsg("error");
             dispose();
@@ -164,6 +168,23 @@ public class DashboardUI extends JFrame {
             });
 
 
+        });
+        this.popup_product.add("Sepete Ekle").addActionListener(e->{
+            int selectId= Integer.parseInt(this.tbl_product.getValueAt(this.tbl_product.getSelectedRow(), 0).toString());
+            Product basketProduct=this.productController.getByID(selectId);
+            if(basketProduct.getStock() <=0) {
+                Helper.showMsg("Bu Ürün Stokta Yoktur");
+            }
+            else{
+                Basket basket=new Basket(basketProduct.getId());
+               boolean result=false;
+               if(this.basketController.save(basket)){
+                   Helper.showMsg("done");
+               }
+               else{
+                   Helper.showMsg("error");
+               }
+            }
         });
         this.popup_product.add("Sil").addActionListener(e->{
             int selectId= Integer.parseInt(this.tbl_product.getValueAt(this.tbl_product.getSelectedRow(), 0).toString());
