@@ -57,7 +57,7 @@ public class DashboardUI extends JFrame {
     private JLabel lbl_basket_count;
     private JTable tbl_basket;
     private User user;
-    private  CustomerController customerController;
+    private CustomerController customerController;
     private ProductController productController;
     private BasketController basketController;
     private DefaultTableModel tmdl_customer=new DefaultTableModel();
@@ -107,6 +107,26 @@ public class DashboardUI extends JFrame {
         loadBasketTable();
         loadBasketButtonEvent();
         loadCustomerBasketCombo();
+        this.btn_basket_new.addActionListener(e->{
+            Item selectedCustomer = (Item) cmb_basket_customer.getSelectedItem();
+            if(selectedCustomer == null) {
+                Helper.showMsg("Lütfen bir müsteri seçiniz");
+            }
+            else{
+                Customer customer = this.customerController.findById(selectedCustomer.getKey());
+                ArrayList<Basket> baskets=this.basketController.findAll();
+                if(customer.getId() == 0) {
+                    Helper.showMsg("Böyle bir müşteri bulunamadı");
+                }
+                else if (baskets.size()==0){
+                    Helper.showMsg("Lütfen sepete ürün ekleyiniz");
+                }
+                else {
+                    CartUI cartUI=new CartUI(customer);
+
+                }
+            }
+        });
 
     }
     private void loadCustomerBasketCombo(){
