@@ -32,32 +32,31 @@ public class CartDao {
         return carts;
     }
     public boolean save(Cart cart) {
-        String query = "INSERT INTO cart" +
-                "(" +
-                "customertwo_id,"+
-                "product_id,"+
-                "price"+
-                "date"+
-                "note"+
-                ")"+
-                " VALUES(?,?,?,?,?)";
+        String query = "INSERT INTO cart (" +
+                "customertwo_id, " +
+                "product_id, " +
+                "price, " +
+                "date, " +
+                "note" +
+                ") VALUES (?, ?, ?, ?, ?)";
         try {
             PreparedStatement pr = this.connection.prepareStatement(query);
-            pr.setInt(1, cart.getCustomer().getId());
-            pr.setInt(2, cart.getProduct().getId());
-            pr.setDouble(3, cart.getPrice());
-           pr.setDate(4, Date.valueOf(cart.getDate()));
-            pr.setString(5,cart.getNote());
+            pr.setInt(1, cart.getCustomerId());
+            pr.setInt(2, cart.getProductId());
+            pr.setInt(3, cart.getPrice());
+            pr.setDate(4, Date.valueOf(cart.getDate()));
+            pr.setString(5, cart.getNote());
             return pr.executeUpdate() != -1;
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return true;
     }
+
     public Cart match(ResultSet rs) throws SQLException {
         Cart cart=new Cart();
         cart.setId(Integer.parseInt(String.valueOf(rs.getInt("id"))));
-        cart.setCustomerId(Integer.parseInt(String.valueOf(rs.getInt("customer_id"))));
+        cart.setCustomerId(Integer.parseInt(String.valueOf(rs.getInt("customertwo_id"))));
         cart.setProductId(Integer.parseInt(String.valueOf(rs.getInt("product_id"))));
         cart.setPrice(rs.getInt("price"));
         cart.setNote(rs.getString("note"));
