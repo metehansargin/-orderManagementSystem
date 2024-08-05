@@ -1,2 +1,4 @@
-package business;public class CartController {
+package business;
+
+public class CartController {
 }
